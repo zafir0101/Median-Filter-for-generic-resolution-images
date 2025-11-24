@@ -68,6 +68,11 @@ architecture datapath_arch of datapath is
     signal w20, w21, w22 : unsigned(7 downto 0) := (others => '0');
     --------------------------------------
 
+    -------------------------------------- Signals associados aos endereços
+    signal s_end_n : unsigned(Tbits_length(pixels => pixels) - 1 downto 0);
+    signal s_end_k : unsigned(Tbits_length(pixels => pixels) - 1 downto 0);
+    --------------------------------------
+
     signal S_filter : unsigned(7 downto 0);
 
     begin
@@ -77,7 +82,7 @@ architecture datapath_arch of datapath is
 
         if rising_edge(clk) then
             if (c_signals.read_n = '1' and c_signals.pipeline_enable = '0') then
-                in_mem(to_integer(end_n)) <= A;
+                in_mem(to_integer(s_end_n)) <= A;
             end if;
         end if;
 
@@ -88,7 +93,7 @@ architecture datapath_arch of datapath is
 
         if rising_edge(clk) then
             if (c_signals.write_k = '1' and (c_signals.pipeline_enable = '1' or c_signals.z = '1')) then
-                out_mem(to_integer(end_k)) <= S_filter;
+                out_mem(to_integer(s_end_k)) <= S_filter;
             end if;
         end if;
 
@@ -97,10 +102,10 @@ architecture datapath_arch of datapath is
 
     LOAD_MEM_OUT: process(clk)
     begin
-        if (end_k <= Max_counter_k(pixels => PIXELS)) then
+        if (s_end_k <= Max_counter_k(pixels => PIXELS)) then
             if rising_edge(clk) then
                 if (c_signals.write_k = '1' and c_signals.pipeline_enable = '0' and c_signals.z = '0' and c_signals.read_n = '0')  then
-                    S <= out_mem(to_integer(end_k));
+                    S <= out_mem(to_integer(s_end_k));
                 end if;
             end if;
         end if;
@@ -114,15 +119,14 @@ architecture datapath_arch of datapath is
                 
                 w00 <= w01;
                 w01 <= w02;
-                w02 <= in_mem(to_integer(end_n));
+                w02 <= in_mem(to_integer(s_end_n));
 
                 w10 <= w11;
                 w11 <= w12;
-                w12 <= in_mem(to_integer(end_n) + pixels);
-
+                w12 <= in_mem(to_integer(s_end_n) + pixels);
                 w20 <= w21;
                 w21 <= w22;
-                w22 <= in_mem(to_integer(end_n) + (2 * pixels));
+                w22 <= in_mem(to_integer(s_end_n) + (2 * pixels));
 
             end if;
         end if;
@@ -141,7 +145,7 @@ architecture datapath_arch of datapath is
                     clk       => clk,
                     c_signals => c_signals,
                     s_signals => s_from_k,
-                    end_k     => end_k,
+                    end_k     => s_end_k,
                     k         => open
                     );
 
@@ -151,7 +155,7 @@ architecture datapath_arch of datapath is
                     clk       => clk,
                     c_signals => c_signals,
                     s_signals => s_from_n,
-                    end_n     => end_n,
+                    end_n     => s_end_n,
                     n         => open
                     );
 
@@ -182,4 +186,6 @@ architecture datapath_arch of datapath is
                 valid_out            => col_valid
                 );
 
+    end_n <= s_end_n;
+    end_k <= s_end_k;
 end architecture datapath_arch;
