@@ -5,7 +5,7 @@
 --	Project:     Median Filter
 --	Description: Contém a descrição de um comparador que verifica
 --               se `is_extreme` é 0 ou 1, ou seja, se o pixel central
---               é um valor extremo (255 e 0) ou não.
+--               é um valor extremo (maior que 250 ou menor que 5) ou não.
 --------------------------------------------------
 
 library ieee;
@@ -23,6 +23,6 @@ end entity;
 architecture behavior of comparator_f is
     begin
 
-    is_extreme <= '1' when (pixel = 255 or pixel = 0) else '0';
+    is_extreme <= '1' when (pixel >= 250 or pixel <= 5) else '0';
 
 end architecture behavior;
